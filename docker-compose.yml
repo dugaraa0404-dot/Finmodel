@@ -1,0 +1,38 @@
+# For a VM (Oracle Cloud Always Free, any VPS, a home server).
+# Usage on the VM:
+#   echo "DOMAIN=<your-ip-with-dashes>.sslip.io" > .env     # or your own domain
+#   docker compose up -d --build
+# Caddy obtains a free HTTPS certificate automatically and forwards to the app.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      MAX_HEAVY_JOBS: "3"
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=5).status==200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

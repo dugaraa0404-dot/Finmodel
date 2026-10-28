@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: finmodel-public
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      # Free instances have 512 MB RAM: run one heavy analysis at a time.
+      - key: MAX_HEAVY_JOBS
+        value: "1"
