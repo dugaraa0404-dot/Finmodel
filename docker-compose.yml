@@ -1,0 +1,49 @@
+# For a VM (Oracle Cloud Always Free, any VPS, a home server).
+# Usage on the VM:
+#   echo "DOMAIN=<your-ip-with-dashes>.sslip.io" > .env     # or your own domain
+#   echo "FRED_API_KEY=<your-free-fred-key>" >> .env
+#   docker compose up -d --build
+# Caddy obtains a free HTTPS certificate automatically and forwards to the app.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      MAX_HEAVY_JOBS: "3"
+      # Always-on host: keep downloaded data across restarts and keep popular
+      # tickers, the market board and the scanner warm every 15 minutes.
+      CACHE_DIR: "/data/cache"
+      WARM_INTERVAL_SECONDS: "900"
+      WARM_TICKERS: "AAPL,MSFT,NVDA,AMZN,GOOGL,META,TSLA,SPY,QQQ,GC=F,CL=F,BTC-USD,EURUSD=X"
+      # Free key from fredaccount.stlouisfed.org; put FRED_API_KEY=... in .env next to this file.
+      FRED_API_KEY: ${FRED_API_KEY:-}
+    volumes:
+      - app_cache:/data/cache
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=5).status==200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  app_cache:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: finmodel-public
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      # Free instances have 512 MB RAM: run one heavy analysis at a time.
+      - key: MAX_HEAVY_JOBS
+        value: "1"
+      # Free key from fredaccount.stlouisfed.org (Render asks for it on first deploy).
+      - key: FRED_API_KEY
+        sync: false
