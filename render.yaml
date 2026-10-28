@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: finmodel-public
-    runtime: python
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn Finmodel_multiasset_ticker_analysis:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
