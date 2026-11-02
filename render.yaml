@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: finmodel-public
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: MAX_HEAVY_JOBS
+        value: "1"
+      - key: ML_THREADS
+        value: "1"
+      - key: IO_WORKERS
+        value: "4"
+      - key: FRED_API_KEY
+        sync: false
